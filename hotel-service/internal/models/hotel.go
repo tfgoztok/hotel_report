@@ -14,3 +14,9 @@ type Hotel struct {
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
+
+type HotelOfficials struct {
+	HotelID         uuid.UUID `json:"hotel_id"`
+	OfficialName    string    `json:"official_name"`
+	OfficialSurname string    `json:"official_surname"`
+}

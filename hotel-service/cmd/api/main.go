@@ -12,28 +12,28 @@ import (
 
 // main function is the entry point of the application
 func main() {
-	// Load the application configuration
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("Failed to load config: %v", err) // Log fatal error if config loading fails
+		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	// Initialize the logger with the specified log level
-	logger := logger.New(cfg.LogLevel)
+	logger := logger.New()
 
-	// Connect to the database using the provided database URL
-	db, err := db.Connect(cfg.DatabaseURL)
+	database, err := db.Connect(cfg.DatabaseURL)
 	if err != nil {
-		logger.Fatal("Failed to connect to database", "error", err) // Log fatal error if database connection fails
+		logger.Fatal("Failed to connect to database", "error", err)
 	}
-	defer db.Close() // Ensure the database connection is closed when main exits
+	defer database.Close()
 
-	// Create a new router with the database and logger
-	router := api.NewRouter(db, logger)
+	// Run migrations
+	if err := db.RunMigrations(database, "./internal/db/migrations"); err != nil {
+		logger.Fatal("Failed to run migrations", "error", err)
+	}
 
-	// Start the HTTP server on the specified port
+	router := api.NewRouter(database, logger)
+
 	logger.Info("Starting server", "port", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {
-		logger.Fatal("Server failed to start", "error", err) // Log fatal error if server fails to start
+		logger.Fatal("Server failed to start", "error", err)
 	}
 }

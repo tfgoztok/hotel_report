@@ -36,3 +36,17 @@ func (s *HotelService) DeleteHotel(ctx context.Context, id uuid.UUID) error {
 func (s *HotelService) GetHotelDetails(ctx context.Context, id uuid.UUID) (*models.Hotel, error) {
 	return s.repo.GetByID(ctx, id) // Fetch the hotel details from the repository
 }
+
+// ListOfficials retrieves the officials of a hotel by its ID.
+func (s *HotelService) ListOfficials(ctx context.Context, id uuid.UUID) (*models.HotelOfficials, error) {
+	hotel, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.HotelOfficials{
+		HotelID:         hotel.ID,
+		OfficialName:    hotel.OfficialName,
+		OfficialSurname: hotel.OfficialSurname,
+	}, nil
+}

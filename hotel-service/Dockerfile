@@ -14,6 +14,7 @@ FROM alpine:3.14
 WORKDIR /
 
 COPY --from=builder /hotel-service /hotel-service
+COPY --from=builder /app/internal/db/migrations /internal/db/migrations
 
 EXPOSE 8080
 

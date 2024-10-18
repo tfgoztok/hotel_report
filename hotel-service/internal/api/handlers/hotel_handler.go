@@ -74,3 +74,21 @@ func (h *HotelHandler) GetHotelDetails(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(hotel)
 }
+
+// ListOfficials lists the officials of a hotel by ID.
+func (h *HotelHandler) ListOfficials(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	id, err := uuid.Parse(params["id"])
+	if err != nil {
+		http.Error(w, "Invalid hotel ID", http.StatusBadRequest)
+		return
+	}
+
+	officials, err := h.service.ListOfficials(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(officials)
+}
