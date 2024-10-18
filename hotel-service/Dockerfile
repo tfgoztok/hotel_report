@@ -16,6 +16,9 @@ WORKDIR /
 COPY --from=builder /hotel-service /hotel-service
 COPY --from=builder /app/internal/db/migrations /internal/db/migrations
 
+# Copy test files
+COPY --from=builder /app/tests /tests
+
 EXPOSE 8080
 
 CMD ["/hotel-service"]

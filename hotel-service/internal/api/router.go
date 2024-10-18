@@ -32,12 +32,12 @@ func NewRouter(db *sql.DB, logger logger.Logger) http.Handler {
 	r.Use(middleware.Logging(logger))
 
 	// Define routes for hotel operations
-	r.HandleFunc("/api/hotels", hotelHandler.CreateHotel).Methods("POST")                                 // Create a new hotel
-	r.HandleFunc("/api/hotels/{id}", hotelHandler.DeleteHotel).Methods("DELETE")                          // Delete a hotel by ID
-	r.HandleFunc("/api/hotels/{id}/contacts", contactHandler.AddContact).Methods("POST")                  // Add a contact to a hotel
-	r.HandleFunc("/api/hotels/{id}/contacts/{contactId}", contactHandler.DeleteContact).Methods("DELETE") // Delete a contact by ID
-	r.HandleFunc("/api/hotels/{id}/officials", hotelHandler.ListOfficials).Methods("GET")                 // List officials for a hotel
-	r.HandleFunc("/api/hotels/{id}", hotelHandler.GetHotelDetails).Methods("GET")                         // Get details of a hotel
+	r.HandleFunc("/hotels", hotelHandler.CreateHotel).Methods("POST")                                 // Create a new hotel
+	r.HandleFunc("/hotels/{id}", hotelHandler.DeleteHotel).Methods("DELETE")                          // Delete a hotel by ID
+	r.HandleFunc("/hotels/{id}/contacts", contactHandler.AddContact).Methods("POST")                  // Add a contact to a hotel
+	r.HandleFunc("/hotels/{id}/contacts/{contactId}", contactHandler.DeleteContact).Methods("DELETE") // Delete a contact by ID
+	r.HandleFunc("/hotels/{id}/officials", hotelHandler.ListOfficials).Methods("GET")                 // List officials for a hotel
+	r.HandleFunc("/hotels/{id}", hotelHandler.GetHotelDetails).Methods("GET")                         // Get details of a hotel
 
 	return r // Return the configured router
 }
