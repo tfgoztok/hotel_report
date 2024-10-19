@@ -102,7 +102,7 @@ services:
     user: root
     volumes:
       - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - /mnt/wsl/docker-desktop-data/version-pack-data/community/docker/containers:/var/lib/docker/containers:ro
+      - /var/lib/docker/containers/:/var/lib/docker/containers/:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: ["--strict.perms=false"]
     depends_on:

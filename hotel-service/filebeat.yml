@@ -1,14 +1,22 @@
 filebeat.inputs:
 - type: container
   paths:
-    - '/var/lib/docker/containers/*/*-json.log'
-
-processors:
-- add_docker_metadata:
-    host: "unix:///var/run/docker.sock"
+    - '/var/lib/docker/containers/*/*.log'
+  processors:
+    - add_docker_metadata:
+        host: "unix:///var/run/docker.sock"
+    - drop_event:
+        when:
+          not:
+            or:
+              - contains:
+                  container.name: "hotel-service-app"
+              - contains:
+                  container.name: "hotel-service-db"
+              - contains:
+                  container.name: "hotel-service-rabbitmq"
 
 output.logstash:
   hosts: ["logstash:5044"]
 
-logging.level: debug
-logging.to_stderr: true
+logging.level: info
