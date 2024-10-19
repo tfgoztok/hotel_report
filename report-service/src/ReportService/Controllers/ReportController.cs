@@ -1,24 +1,29 @@
 using Microsoft.AspNetCore.Mvc;
 using ReportService.Interfaces;
 using ReportService.Models;
+using ReportService.Services;
+using System.Text.Json;
 
 namespace ReportService.Controllers
 {
+    // Controller for handling report-related requests
     [ApiController]
     [Route("[controller]")]
     public class ReportController : ControllerBase
     {
-        // Dependency injection for the report repository and logger
+        // Dependencies for report repository, RabbitMQ service, and logger
         private readonly IReportRepository _reportRepository;
+        private readonly RabbitMQService _rabbitMQService;
         private readonly ILogger<ReportController> _logger;
 
-        public ReportController(IReportRepository reportRepository, ILogger<ReportController> logger)
+        public ReportController(IReportRepository reportRepository, RabbitMQService rabbitMQService, ILogger<ReportController> logger)
         {
             _reportRepository = reportRepository;
+            _rabbitMQService = rabbitMQService;
             _logger = logger;
         }
 
-        // GET: /report - Retrieves all reports
+        // GET: Retrieve all reports
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
@@ -26,9 +31,9 @@ namespace ReportService.Controllers
             return Ok(reports);
         }
 
-        // GET: /report/{id} - Retrieves a report by its ID
+        // GET: Retrieve a report by its ID
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(Guid id)
+        public async Task<IActionResult> Get(string id)
         {
             var report = await _reportRepository.GetByIdAsync(id);
             if (report == null)
@@ -38,11 +43,12 @@ namespace ReportService.Controllers
             return Ok(report);
         }
 
-        // POST: /report - Requests a new report
+        // POST: Request a new report
         [HttpPost]
         public IActionResult RequestReport([FromBody] ReportRequest request)
         {
-            // TODO: Send message to RabbitMQ
+            var message = JsonSerializer.Serialize(request);
+            _rabbitMQService.PublishMessage(message);
             _logger.LogInformation($"Report requested for location: {request.Location}");
             return Accepted();
         }
