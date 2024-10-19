@@ -42,7 +42,7 @@ func NewRouter(db *sql.DB, logger logger.Logger, rabbitMQ messaging.RabbitMQInte
 	r.HandleFunc("/hotels/{id}/contacts/{contactId}", contactHandler.DeleteContact).Methods("DELETE") // Delete a contact by ID
 	r.HandleFunc("/hotels/{id}/officials", hotelHandler.ListOfficials).Methods("GET")                 // List officials for a hotel
 	r.HandleFunc("/hotels/{id}", hotelHandler.GetHotelDetails).Methods("GET")                         // Get details of a hotel
-	r.HandleFunc("/reports", reportHandler.RequestReport).Methods("POST")                             // Request report from report-service
+	r.HandleFunc("/reports/request", reportHandler.RequestReport).Methods("POST")                     // Request report from report-service
 
 	return r // Return the configured router
 }
