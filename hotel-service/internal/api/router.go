@@ -13,7 +13,7 @@ import (
 	"github.com/tfgoztok/hotel-service/pkg/logger"
 )
 
-func NewRouter(db *sql.DB, logger logger.Logger, rabbitMQ *messaging.RabbitMQ) http.Handler {
+func NewRouter(db *sql.DB, logger logger.Logger, rabbitMQ messaging.RabbitMQInterface) http.Handler {
 	// Create a new router instance
 	r := mux.NewRouter()
 

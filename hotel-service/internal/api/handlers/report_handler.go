@@ -8,13 +8,11 @@ import (
 	"github.com/tfgoztok/hotel-service/internal/messaging"
 )
 
-// ReportHandler handles report-related requests
 type ReportHandler struct {
-	rabbitMQ *messaging.RabbitMQ // RabbitMQ instance for message publishing
+	rabbitMQ messaging.RabbitMQInterface
 }
 
-// NewReportHandler creates a new instance of ReportHandler
-func NewReportHandler(rabbitMQ *messaging.RabbitMQ) *ReportHandler {
+func NewReportHandler(rabbitMQ messaging.RabbitMQInterface) *ReportHandler {
 	return &ReportHandler{rabbitMQ: rabbitMQ}
 }
 
