@@ -1,5 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-using ReportService.Data;
+using MongoDB.Driver;
 using ReportService.Interfaces;
 using ReportService.Models;
 
@@ -7,45 +6,36 @@ namespace ReportService.Data.Repositories
 {
     public class ReportRepository : IReportRepository
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IMongoCollection<Report> _reports;
 
-        public ReportRepository(ApplicationDbContext context)
+        // Constructor that initializes the MongoDB collection for reports
+        public ReportRepository(IMongoDatabase database)
         {
-            _context = context;
+            _reports = database.GetCollection<Report>("Reports");
         }
 
-        /// <summary>
-        /// Retrieves a report by its unique identifier.
-        /// </summary>
-        public async Task<Report> GetByIdAsync(Guid id)
+        // Asynchronously retrieves a report by its ID
+        public async Task<Report> GetByIdAsync(string id)
         {
-            return await _context.Reports.FindAsync(id);
+            return await _reports.Find(r => r.Id == id).FirstOrDefaultAsync();
         }
 
-        /// <summary>
-        /// Retrieves all reports from the database.
-        /// </summary>
+        // Asynchronously retrieves all reports
         public async Task<IEnumerable<Report>> GetAllAsync()
         {
-            return await _context.Reports.ToListAsync();
+            return await _reports.Find(_ => true).ToListAsync();
         }
 
-        /// <summary>
-        /// Adds a new report to the database.
-        /// </summary>
+        // Asynchronously adds a new report to the collection
         public async Task AddAsync(Report report)
         {
-            await _context.Reports.AddAsync(report);
-            await _context.SaveChangesAsync();
+            await _reports.InsertOneAsync(report);
         }
 
-        /// <summary>
-        /// Updates an existing report in the database.
-        /// </summary>
+        // Asynchronously updates an existing report in the collection
         public async Task UpdateAsync(Report report)
         {
-            _context.Reports.Update(report);
-            await _context.SaveChangesAsync();
+            await _reports.ReplaceOneAsync(r => r.Id == report.Id, report);
         }
     }
 }
