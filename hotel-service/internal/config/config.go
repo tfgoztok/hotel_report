@@ -20,6 +20,7 @@ func Load() (*Config, error) {
 	viper.SetDefault("PORT", "8080")                                                                    // Default port
 	viper.SetDefault("DATABASE_URL", "postgres://user:password@localhost:5432/hoteldb?sslmode=disable") // Default database URL
 	viper.SetDefault("LOG_LEVEL", "info")                                                               // Default log level
+	viper.SetDefault("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")                              // Default Rabbitmq URL
 
 	var config Config                                // Create an instance of Config to hold the values
 	if err := viper.Unmarshal(&config); err != nil { // Unmarshal environment variables into the config struct
