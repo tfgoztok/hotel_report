@@ -7,6 +7,7 @@ import (
 	"github.com/tfgoztok/hotel-service/internal/api"
 	"github.com/tfgoztok/hotel-service/internal/config"
 	"github.com/tfgoztok/hotel-service/internal/db"
+	"github.com/tfgoztok/hotel-service/internal/messaging"
 	"github.com/tfgoztok/hotel-service/pkg/logger"
 )
 
@@ -25,12 +26,18 @@ func main() {
 	}
 	defer database.Close()
 
+	rabbitMQ, err := messaging.NewRabbitMQ(cfg.RabbitMQURL)
+	if err != nil {
+		logger.Fatal("Failed to connect to RabbitMQ", "error", err)
+	}
+	defer rabbitMQ.Close()
+
 	// Run migrations
 	if err := db.RunMigrations(database, "./internal/db/migrations"); err != nil {
 		logger.Fatal("Failed to run migrations", "error", err)
 	}
 
-	router := api.NewRouter(database, logger)
+	router := api.NewRouter(database, logger, rabbitMQ)
 
 	logger.Info("Starting server", "port", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {

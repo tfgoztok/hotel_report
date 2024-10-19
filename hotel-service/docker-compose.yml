@@ -1,3 +1,5 @@
+version: '2.4'
+
 services:
   app:
     build: .
@@ -5,18 +7,12 @@ services:
       - "8080:8080"
     environment:
       - DATABASE_URL=postgres://user:password@db:5432/hoteldb?sslmode=disable
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
-      - db
-    command: ["/bin/sh", "-c", "sleep 5 && /hotel-service"]
-
-  db:
-    image: postgres:13.4
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: hoteldb
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   test:
     build:
@@ -24,9 +20,33 @@ services:
       dockerfile: Dockerfile.test
     environment:
       - DATABASE_URL=postgres://user:password@db:5432/hoteldb?sslmode=disable
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
-      - db
-    command: ["go", "test", "./tests/unit/...", "-v", "-cover"]
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    command: ["go", "test", "./tests/...", "-v", "-cover"]
 
-volumes:
-  postgres_data:
+  db:
+    image: postgres:13.4
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hoteldb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d hoteldb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 10

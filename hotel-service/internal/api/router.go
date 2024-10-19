@@ -7,12 +7,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/tfgoztok/hotel-service/internal/api/handlers"
 	"github.com/tfgoztok/hotel-service/internal/api/middleware"
+	"github.com/tfgoztok/hotel-service/internal/messaging"
 	"github.com/tfgoztok/hotel-service/internal/repository"
 	"github.com/tfgoztok/hotel-service/internal/service"
 	"github.com/tfgoztok/hotel-service/pkg/logger"
 )
 
-func NewRouter(db *sql.DB, logger logger.Logger) http.Handler {
+func NewRouter(db *sql.DB, logger logger.Logger, rabbitMQ messaging.RabbitMQInterface) http.Handler {
 	// Create a new router instance
 	r := mux.NewRouter()
 
@@ -28,6 +29,9 @@ func NewRouter(db *sql.DB, logger logger.Logger) http.Handler {
 	hotelHandler := handlers.NewHotelHandler(hotelService)
 	contactHandler := handlers.NewContactHandler(contactService)
 
+	// Initialize handler for report request
+	reportHandler := handlers.NewReportHandler(rabbitMQ)
+
 	// Middleware for logging requests
 	r.Use(middleware.Logging(logger))
 
@@ -38,6 +42,7 @@ func NewRouter(db *sql.DB, logger logger.Logger) http.Handler {
 	r.HandleFunc("/hotels/{id}/contacts/{contactId}", contactHandler.DeleteContact).Methods("DELETE") // Delete a contact by ID
 	r.HandleFunc("/hotels/{id}/officials", hotelHandler.ListOfficials).Methods("GET")                 // List officials for a hotel
 	r.HandleFunc("/hotels/{id}", hotelHandler.GetHotelDetails).Methods("GET")                         // Get details of a hotel
+	r.HandleFunc("/reports/request", reportHandler.RequestReport).Methods("POST")                     // Request report from report-service
 
 	return r // Return the configured router
 }
