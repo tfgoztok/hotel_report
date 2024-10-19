@@ -8,18 +8,21 @@ import (
 	"github.com/tfgoztok/hotel-service/internal/models"
 )
 
-// HotelRepository is a struct that holds the database connection.
-type HotelRepository struct {
+// Ensure HotelRepositoryImpl implements HotelRepository interface
+var _ HotelRepository = (*HotelRepositoryImpl)(nil)
+
+// HotelRepositoryImpl is a struct that holds the database connection.
+type HotelRepositoryImpl struct {
 	db *sql.DB // Database connection
 }
 
-// NewHotelRepository initializes a new HotelRepository with the provided database connection.
-func NewHotelRepository(db *sql.DB) *HotelRepository {
-	return &HotelRepository{db: db} // Return a new instance of HotelRepository
+// NewHotelRepository initializes a new HotelRepositoryImpl with the provided database connection.
+func NewHotelRepository(db *sql.DB) *HotelRepositoryImpl {
+	return &HotelRepositoryImpl{db: db} // Return a new instance of HotelRepositoryImpl
 }
 
 // Create inserts a new hotel record into the database.
-func (r *HotelRepository) Create(ctx context.Context, hotel *models.Hotel) error {
+func (r *HotelRepositoryImpl) Create(ctx context.Context, hotel *models.Hotel) error {
 	query := `
 		INSERT INTO hotels (id, official_name, official_surname, company_title, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -30,7 +33,7 @@ func (r *HotelRepository) Create(ctx context.Context, hotel *models.Hotel) error
 }
 
 // Delete removes a hotel record from the database by its ID.
-func (r *HotelRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *HotelRepositoryImpl) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM hotels WHERE id = $1`
 	// Execute the delete query using the hotel ID
 	_, err := r.db.ExecContext(ctx, query, id)
@@ -38,7 +41,7 @@ func (r *HotelRepository) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 // GetByID retrieves a hotel record from the database by its ID.
-func (r *HotelRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Hotel, error) {
+func (r *HotelRepositoryImpl) GetByID(ctx context.Context, id uuid.UUID) (*models.Hotel, error) {
 	query := `
 		SELECT id, official_name, official_surname, company_title, created_at, updated_at
 		FROM hotels

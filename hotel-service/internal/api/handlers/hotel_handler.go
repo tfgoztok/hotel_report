@@ -12,11 +12,11 @@ import (
 
 // HotelHandler handles hotel-related HTTP requests
 type HotelHandler struct {
-	service *service.HotelService // Service for hotel operations
+	service service.HotelService // Service for hotel operations
 }
 
 // NewHotelHandler creates a new HotelHandler with the given service
-func NewHotelHandler(service *service.HotelService) *HotelHandler {
+func NewHotelHandler(service service.HotelService) *HotelHandler {
 	return &HotelHandler{service: service}
 }
 

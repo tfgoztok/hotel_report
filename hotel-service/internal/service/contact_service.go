@@ -11,11 +11,11 @@ import (
 
 // ContactService provides methods to manage contacts.
 type ContactService struct {
-	repo *repository.ContactRepository // Repository for contact data
+	repo repository.ContactRepository // Repository for contact data
 }
 
 // NewContactService creates a new instance of ContactService.
-func NewContactService(repo *repository.ContactRepository) *ContactService {
+func NewContactService(repo repository.ContactRepository) *ContactService {
 	return &ContactService{repo: repo} // Initialize ContactService with the provided repository
 }
 

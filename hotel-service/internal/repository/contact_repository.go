@@ -8,19 +8,22 @@ import (
 	"github.com/tfgoztok/hotel-service/internal/models"
 )
 
-// ContactRepository is a struct that holds the database connection.
-type ContactRepository struct {
+// Ensure ContactRepositoryImpl implements ContactRepository interface
+var _ ContactRepository = (*ContactRepositoryImpl)(nil)
+
+// ContactRepositoryImpl is a struct that holds the database connection.
+type ContactRepositoryImpl struct {
 	db *sql.DB // Database connection
 }
 
-// NewContactRepository initializes a new ContactRepository with the provided database connection.
-func NewContactRepository(db *sql.DB) *ContactRepository {
-	return &ContactRepository{db: db}
+// NewContactRepository initializes a new ContactRepositoryImpl with the provided database connection.
+func NewContactRepository(db *sql.DB) ContactRepository {
+	return &ContactRepositoryImpl{db: db}
 }
 
 // Create inserts a new contact into the database.
 // It takes a context for managing request-scoped values and a pointer to a Contact model.
-func (r *ContactRepository) Create(ctx context.Context, contact *models.Contact) error {
+func (r *ContactRepositoryImpl) Create(ctx context.Context, contact *models.Contact) error {
 	query := `
 		INSERT INTO contacts (id, hotel_id, type, content, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6)
@@ -32,7 +35,7 @@ func (r *ContactRepository) Create(ctx context.Context, contact *models.Contact)
 
 // Delete removes a contact from the database by its ID.
 // It takes a context and the UUID of the contact to be deleted.
-func (r *ContactRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *ContactRepositoryImpl) Delete(ctx context.Context, id uuid.UUID) error {
 	query := `DELETE FROM contacts WHERE id = $1`
 	// Execute the delete query using the provided contact ID.
 	_, err := r.db.ExecContext(ctx, query, id)
@@ -41,7 +44,7 @@ func (r *ContactRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 // GetByHotelID retrieves all contacts associated with a specific hotel ID.
 // It returns a slice of pointers to Contact models and an error if any occurs.
-func (r *ContactRepository) GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*models.Contact, error) {
+func (r *ContactRepositoryImpl) GetByHotelID(ctx context.Context, hotelID uuid.UUID) ([]*models.Contact, error) {
 	query := `
 		SELECT id, hotel_id, type, content, created_at, updated_at
 		FROM contacts
