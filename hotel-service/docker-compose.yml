@@ -1,4 +1,5 @@
-version: '3'
+version: '2.4'
+
 services:
   app:
     build: .
@@ -8,8 +9,10 @@ services:
       - DATABASE_URL=postgres://user:password@db:5432/hoteldb?sslmode=disable
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
-      - db
-      - rabbitmq
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   test:
     build:
@@ -19,8 +22,10 @@ services:
       - DATABASE_URL=postgres://user:password@db:5432/hoteldb?sslmode=disable
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     depends_on:
-      - db
-      - rabbitmq
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     command: ["go", "test", "./tests/...", "-v", "-cover"]
 
   db:
@@ -29,6 +34,11 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: hoteldb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d hoteldb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -36,7 +46,7 @@ services:
       - "5672:5672"
       - "15672:15672"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:15672"]
-      interval: 30s
-      timeout: 30s
-      retries: 5
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
