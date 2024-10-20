@@ -1,0 +1,8 @@
+# Ignore repopack-output.txt file
+repopack-output.txt
+
+# Ignore repopackignore file
+.repopackignore
+
+# Ignore configuration files
+repopack.config.json

@@ -7,6 +7,7 @@ services:
       - DATABASE_URL=postgres://user:password@db:5432/hoteldb?sslmode=disable
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       db:
         condition: service_healthy
@@ -19,6 +20,8 @@ services:
       options:
         max-size: "200k"
         max-file: "10"
+    networks:
+      - hotel-network
 
   test:
     build:
@@ -33,6 +36,8 @@ services:
       rabbitmq:
         condition: service_healthy
     command: ["go", "test", "./tests/...", "-v", "-cover"]
+    networks:
+      - hotel-network
 
   db:
     image: postgres:13.4-alpine
@@ -45,6 +50,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - hotel-network
 
   rabbitmq:
     image: rabbitmq:3-alpine
@@ -56,6 +63,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    networks:
+      - hotel-network
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.15.0
@@ -71,6 +80,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - hotel-network
 
   logstash:
     image: docker.elastic.co/logstash/logstash:7.15.0
@@ -83,6 +94,8 @@ services:
         condition: service_healthy
     environment:
       - "LS_JAVA_OPTS=-Xms256m -Xmx256m"
+    networks:
+      - hotel-network
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.15.0
@@ -96,6 +109,8 @@ services:
     depends_on:
       elasticsearch:
         condition: service_healthy
+    networks:
+      - hotel-network
 
   filebeat:
     image: docker.elastic.co/beats/filebeat:7.15.0
@@ -108,3 +123,9 @@ services:
     depends_on:
       - elasticsearch
       - logstash
+    networks:
+      - hotel-network
+networks:
+  hotel-network:
+    name: hotel-network
+    driver: bridge

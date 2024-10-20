@@ -1,0 +1,36 @@
+services:
+  report-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:80"
+    environment:
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoDbSettings__DatabaseName=ReportDB
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__QueueName=report_requests
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    depends_on:
+      - mongodb
+    networks:
+      - report-network
+      - hotel-network
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - report-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  report-network:
+    driver: bridge
+  hotel-network:  # Updated network name
+    external: true
