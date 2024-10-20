@@ -37,6 +37,17 @@ builder.Services.AddSingleton<RabbitMQService>(); // Register RabbitMQ service a
 builder.Services.AddScoped<IReportRepository, ReportRepository>(); // Register report repository with scoped lifetime
 builder.Services.AddScoped<IReportGenerationService, ReportGenerationService>(); // Register report generation service with scoped lifetime
 
+// Add HTTP client services for making HTTP requests
+builder.Services.AddHttpClient();
+// Register GraphQL client as a singleton service, which will use the HTTP client and configuration to make GraphQL queries
+builder.Services.AddSingleton<GraphQLClient>(sp =>
+{
+    var httpClient = sp.GetRequiredService<HttpClient>(); // Get the HTTP client instance
+    var configuration = sp.GetRequiredService<IConfiguration>(); // Get the configuration instance
+    var endpoint = configuration["GraphQL:Endpoint"]; // Get the GraphQL endpoint from configuration
+    return new GraphQLClient(httpClient, endpoint); // Create and return a new GraphQL client instance
+});
+
 var app = builder.Build(); // Build the application
 
 // Configure the HTTP request pipeline.
