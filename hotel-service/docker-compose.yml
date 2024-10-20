@@ -41,7 +41,6 @@ services:
 
   db:
     image: postgres:13.4-alpine
-    image: postgres:13.4-alpine
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
@@ -55,7 +54,6 @@ services:
       - hotel-network
 
   rabbitmq:
-    image: rabbitmq:3-alpine
     image: rabbitmq:3-alpine
     ports:
       - "5672:5672"
