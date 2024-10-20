@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/olivere/elastic/v7"
 	"github.com/tfgoztok/hotel-service/internal/api/handlers"
 	"github.com/tfgoztok/hotel-service/internal/api/middleware"
 	"github.com/tfgoztok/hotel-service/internal/messaging"
@@ -13,7 +14,7 @@ import (
 	"github.com/tfgoztok/hotel-service/pkg/logger"
 )
 
-func NewRouter(db *sql.DB, logger logger.Logger, rabbitMQ messaging.RabbitMQInterface) http.Handler {
+func NewRouter(db *sql.DB, logger logger.Logger, rabbitMQ messaging.RabbitMQInterface, esClient *elastic.Client) http.Handler {
 	// Create a new router instance
 	r := mux.NewRouter()
 
@@ -29,8 +30,8 @@ func NewRouter(db *sql.DB, logger logger.Logger, rabbitMQ messaging.RabbitMQInte
 	hotelHandler := handlers.NewHotelHandler(hotelService)
 	contactHandler := handlers.NewContactHandler(contactService)
 
-	// Initialize handler for report request
-	reportHandler := handlers.NewReportHandler(rabbitMQ)
+	// Initialize handler for elk
+	reportHandler := handlers.NewReportHandler(rabbitMQ, esClient)
 
 	// Middleware for logging requests
 	r.Use(middleware.Logging(logger))
