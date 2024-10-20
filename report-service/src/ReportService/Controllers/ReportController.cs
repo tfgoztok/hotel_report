@@ -12,14 +12,14 @@ namespace ReportService.Controllers
     {
         // Dependency injection for the report repository, RabbitMQ service, and logger
         private readonly IReportRepository _reportRepository;
-        private readonly RabbitMQService _rabbitMQService;
+        private readonly IRabbitMQService _rabbitMQService;
         private readonly ILogger<ReportController> _logger;
 
-        public ReportController(IReportRepository reportRepository, RabbitMQService rabbitMQService, ILogger<ReportController> logger)
+        public ReportController(IReportRepository reportRepository, IRabbitMQService rabbitMQService, ILogger<ReportController> logger)
         {
-            _reportRepository = reportRepository;
-            _rabbitMQService = rabbitMQService;
-            _logger = logger;
+        _reportRepository = reportRepository;
+        _rabbitMQService = rabbitMQService;
+        _logger = logger;
         }
 
         // GET: Retrieve all reports

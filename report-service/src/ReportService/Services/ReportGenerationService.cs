@@ -54,6 +54,11 @@ namespace ReportService.Services
                     _logger.LogWarning("Failed to deserialize report request");
                 }
             }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "Error processing message");
+                _logger.LogWarning("Failed to deserialize report request");
+            }
             catch (Exception ex)
             {
                 // Log any exceptions that occur during processing
