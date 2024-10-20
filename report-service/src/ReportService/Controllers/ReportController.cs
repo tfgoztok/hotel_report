@@ -6,12 +6,11 @@ using System.Text.Json;
 
 namespace ReportService.Controllers
 {
-    // Controller for handling report-related requests
     [ApiController]
     [Route("[controller]")]
     public class ReportController : ControllerBase
     {
-        // Dependencies for report repository, RabbitMQ service, and logger
+        // Dependency injection for the report repository, RabbitMQ service, and logger
         private readonly IReportRepository _reportRepository;
         private readonly RabbitMQService _rabbitMQService;
         private readonly ILogger<ReportController> _logger;
@@ -31,7 +30,7 @@ namespace ReportService.Controllers
             return Ok(reports);
         }
 
-        // GET: Retrieve a report by its ID
+        // GET: Retrieve a specific report by ID
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(string id)
         {
@@ -54,9 +53,9 @@ namespace ReportService.Controllers
         }
     }
 
-    // Model for report request
+    // Model for report request containing location information
     public class ReportRequest
     {
-        public string Location { get; set; }
+        public string Location { get; set; } = null!;
     }
 }

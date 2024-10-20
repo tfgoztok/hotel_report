@@ -39,5 +39,12 @@ namespace ReportService.Services
             _channel?.Dispose(); // Dispose of the channel if it exists
             _connection?.Dispose(); // Dispose of the connection if it exists
         }
+
+        // Method to publish a message to the RabbitMQ queue
+        public void PublishMessage(string message)
+        {
+            var body = Encoding.UTF8.GetBytes(message); // Convert the message to a byte array
+            _channel.BasicPublish(exchange: "", routingKey: QueueName, basicProperties: null, body: body); // Publish the message to the queue
+        }
     }
 }

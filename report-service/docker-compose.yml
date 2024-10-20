@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   report-service:
     build:
@@ -11,12 +9,14 @@ services:
       - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
       - MongoDbSettings__DatabaseName=ReportDB
       - RabbitMQ__HostName=rabbitmq
-      - ELASTICSEARCH_URL=http://elasticsearch:9200  # This should point to the existing Elasticsearch service
+      - RabbitMQ__QueueName=report_requests
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - mongodb
+      - rabbitmq
     networks:
       - report-network
-      - hotel-network  # This should be the network where hotel-service and ELK stack are running
+      - hotel_service_hotel-network  # Updated network name
 
   mongodb:
     image: mongo:latest
@@ -27,11 +27,20 @@ services:
     networks:
       - report-network
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - report-network
+      - hotel_service_hotel-network  # Updated network name
+
 volumes:
   mongodb_data:
 
 networks:
   report-network:
     driver: bridge
-  hotel-network:
-    external: true  # This assumes that the hotel-service network is already created and named 'hotel-network'
+  hotel_service_hotel-network:  # Updated network name
+    external: true
