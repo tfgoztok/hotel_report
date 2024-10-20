@@ -12,6 +12,7 @@ require (
 	github.com/spf13/viper v1.15.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.8.1
+	github.com/graphql-go/graphql v0.8.1
 )
 
 require (
