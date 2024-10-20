@@ -11,6 +11,7 @@ type Hotel struct {
 	OfficialName    string    `json:"official_name"`
 	OfficialSurname string    `json:"official_surname"`
 	CompanyTitle    string    `json:"company_title"`
+	Location        string    `json:"location"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
