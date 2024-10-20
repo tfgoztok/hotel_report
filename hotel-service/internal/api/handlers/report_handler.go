@@ -9,48 +9,54 @@ import (
 	"github.com/tfgoztok/hotel-service/internal/messaging"
 )
 
+// ReportHandler handles report-related requests
 type ReportHandler struct {
-	rabbitMQ messaging.RabbitMQInterface
-	esClient *elastic.Client
+	rabbitMQ messaging.RabbitMQInterface // Interface for RabbitMQ messaging
+	esClient *elastic.Client              // Elasticsearch client
 }
 
+// NewReportHandler creates a new instance of ReportHandler
 func NewReportHandler(rabbitMQ messaging.RabbitMQInterface, esClient *elastic.Client) *ReportHandler {
 	return &ReportHandler{rabbitMQ: rabbitMQ, esClient: esClient}
 }
 
+// ReportRequest represents the structure of a report request
 type ReportRequest struct {
-	ID     uuid.UUID `json:"id"`
-	Status string    `json:"status"`
+    ID       uuid.UUID `json:"id"`       // Unique identifier for the report
+    Status   string    `json:"status"`   // Status of the report request
+    Location string    `json:"location"` // Location associated with the report
 }
 
+// RequestReport handles incoming report requests
 func (h *ReportHandler) RequestReport(w http.ResponseWriter, r *http.Request) {
-	// Create a new report request with a unique ID and a status of "pending"
-	reportRequest := ReportRequest{
-		ID:     uuid.New(),
-		Status: "pending",
-	}
+    var request ReportRequest
+    // Decode the JSON request body into the ReportRequest struct
+    if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest) // Return error if decoding fails
+        return
+    }
 
-	// Publish the report request to the RabbitMQ queue
-	err := h.rabbitMQ.PublishReportRequest("report_requests", reportRequest)
-	if err != nil {
-		// If publishing fails, return an internal server error
-		http.Error(w, "Failed to request report", http.StatusInternalServerError)
-		return
-	}
+    request.ID = uuid.New() // Generate a new UUID for the report
+    request.Status = "pending" // Set the initial status of the report
 
-	// Index the report request in Elasticsearch
-	_, err = h.esClient.Index().
-		Index("report_requests").
-		Id(reportRequest.ID.String()).
-		BodyJson(reportRequest).
-		Do(r.Context())
-	if err != nil {
-		// If indexing fails, return an internal server error
-		http.Error(w, "Failed to index report request", http.StatusInternalServerError)
-		return
-	}
+    // Publish the report request to the RabbitMQ queue
+    err := h.rabbitMQ.PublishReportRequest("report_requests", request)
+    if err != nil {
+        http.Error(w, "Failed to request report", http.StatusInternalServerError) // Handle publishing error
+        return
+    }
 
-	// Respond with a 202 Accepted status and encode the report request in the response
-	w.WriteHeader(http.StatusAccepted)
-	json.NewEncoder(w).Encode(reportRequest)
+    // Index the report request in Elasticsearch
+    _, err = h.esClient.Index().
+        Index("report_requests").
+        Id(request.ID.String()).
+        BodyJson(request).
+        Do(r.Context())
+    if err != nil {
+        http.Error(w, "Failed to index report request", http.StatusInternalServerError) // Handle indexing error
+        return
+    }
+
+    w.WriteHeader(http.StatusAccepted) // Respond with 202 Accepted status
+    json.NewEncoder(w).Encode(request) // Encode the request as JSON and send it in the response
 }
