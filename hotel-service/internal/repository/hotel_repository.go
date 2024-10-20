@@ -54,3 +54,54 @@ func (r *HotelRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Ho
 	}
 	return &hotel, nil // Return the retrieved hotel
 }
+
+// GetByLocation retrieves a list of hotels based on the provided location.
+func (r *HotelRepository) GetByLocation(ctx context.Context, location string) ([]*models.Hotel, error) {
+	query := `
+		SELECT id, official_name, official_surname, company_title, location
+		FROM hotels
+		WHERE location = $1
+	`
+	rows, err := r.db.QueryContext(ctx, query, location)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var hotels []*models.Hotel
+	for rows.Next() {
+		var hotel models.Hotel
+		err := rows.Scan(&hotel.ID, &hotel.OfficialName, &hotel.OfficialSurname, &hotel.CompanyTitle, &hotel.Location)
+		if err != nil {
+			return nil, err
+		}
+		hotels = append(hotels, &hotel)
+	}
+	return hotels, nil
+}
+
+// GetContactsByLocation retrieves a list of contacts associated with hotels based on the provided location.
+func (r *HotelRepository) GetContactsByLocation(ctx context.Context, location string) ([]*models.Contact, error) {
+	query := `
+		SELECT c.id, c.hotel_id, c.type, c.content
+		FROM contacts c
+		JOIN hotels h ON c.hotel_id = h.id
+		WHERE h.location = $1
+	`
+	rows, err := r.db.QueryContext(ctx, query, location)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var contacts []*models.Contact
+	for rows.Next() {
+		var contact models.Contact
+		err := rows.Scan(&contact.ID, &contact.HotelID, &contact.Type, &contact.Content)
+		if err != nil {
+			return nil, err
+		}
+		contacts = append(contacts, &contact)
+	}
+	return contacts, nil
+}
