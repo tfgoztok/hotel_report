@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/olivere/elastic/v7"
 	"github.com/tfgoztok/hotel-service/internal/api"
 	"github.com/tfgoztok/hotel-service/internal/config"
 	"github.com/tfgoztok/hotel-service/internal/db"
@@ -11,7 +12,6 @@ import (
 	"github.com/tfgoztok/hotel-service/pkg/logger"
 )
 
-// main function is the entry point of the application
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
@@ -32,12 +32,21 @@ func main() {
 	}
 	defer rabbitMQ.Close()
 
+	// Connect to Elasticsearch
+	esClient, err := elastic.NewClient(
+		elastic.SetURL(cfg.ElasticsearchURL),
+		elastic.SetSniff(false),
+	)
+	if err != nil {
+		logger.Fatal("Failed to connect to Elasticsearch", "error", err)
+	}
+
 	// Run migrations
 	if err := db.RunMigrations(database, "./internal/db/migrations"); err != nil {
 		logger.Fatal("Failed to run migrations", "error", err)
 	}
 
-	router := api.NewRouter(database, logger, rabbitMQ)
+	router := api.NewRouter(database, logger, rabbitMQ, esClient)
 
 	logger.Info("Starting server", "port", cfg.Port)
 	if err := http.ListenAndServe(":"+cfg.Port, router); err != nil {

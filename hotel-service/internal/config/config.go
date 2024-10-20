@@ -6,10 +6,11 @@ import (
 
 // Config struct holds the configuration values for the application.
 type Config struct {
-	Port        string `mapstructure:"PORT"`         // Port for the application
-	DatabaseURL string `mapstructure:"DATABASE_URL"` // Database connection URL
-	LogLevel    string `mapstructure:"LOG_LEVEL"`    // Logging level for the application
-	RabbitMQURL string `mapstructure:"RABBITMQ_URL"` // RabbitMQ connection URL
+	Port             string `mapstructure:"PORT"`              // Port for the application
+	DatabaseURL      string `mapstructure:"DATABASE_URL"`      // Database connection URL
+	LogLevel         string `mapstructure:"LOG_LEVEL"`         // Logging level for the application
+	RabbitMQURL      string `mapstructure:"RABBITMQ_URL"`      // RabbitMQ connection URL
+	ElasticsearchURL string `mapstructure:"ELASTICSEARCH_URL"` // Elasticsearch connection URL
 }
 
 // Load function initializes the configuration by reading environment variables and setting defaults.
@@ -21,6 +22,7 @@ func Load() (*Config, error) {
 	viper.SetDefault("DATABASE_URL", "postgres://user:password@localhost:5432/hoteldb?sslmode=disable") // Default database URL
 	viper.SetDefault("LOG_LEVEL", "info")                                                               // Default log level
 	viper.SetDefault("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")                              // Default Rabbitmq URL
+	viper.SetDefault("ELASTICSEARCH_URL", "http://localhost:9200")
 
 	var config Config                                // Create an instance of Config to hold the values
 	if err := viper.Unmarshal(&config); err != nil { // Unmarshal environment variables into the config struct
