@@ -50,3 +50,13 @@ func (s *HotelService) ListOfficials(ctx context.Context, id uuid.UUID) (*models
 		OfficialSurname: hotel.OfficialSurname,
 	}, nil
 }
+
+// GetHotelsByLocation fetches hotels based on the provided location argument
+func (s *HotelService) GetHotelsByLocation(ctx context.Context, location string) ([]*models.Hotel, error) {
+	return s.repo.GetByLocation(ctx, location)
+}
+
+// GetContactsByLocation fetches contacts based on the provided location argument
+func (s *HotelService) GetContactsByLocation(ctx context.Context, location string) ([]*models.Contact, error) {
+	return s.repo.GetContactsByLocation(ctx, location)
+}
