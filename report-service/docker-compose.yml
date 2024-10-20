@@ -25,6 +25,21 @@ services:
       - mongodb_data:/data/db
     networks:
       - report-network
+  
+  report-service-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    depends_on:
+      - mongodb
+    environment:
+      - MongoDbSettings__ConnectionString=mongodb://mongodb:27017
+      - MongoDbSettings__DatabaseName=ReportDB
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__QueueName=report_requests
+    networks:
+      - report-network
 
 volumes:
   mongodb_data:

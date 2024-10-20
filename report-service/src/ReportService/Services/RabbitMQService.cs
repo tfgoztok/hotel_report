@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ReportService.Services
 {
-    public class RabbitMQService
+    public class RabbitMQService : IRabbitMQService
     {
         private readonly IConnection _connection; // Connection to the RabbitMQ server
         private readonly IModel _channel; // Channel for communication with RabbitMQ
