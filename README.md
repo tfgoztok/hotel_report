@@ -60,7 +60,7 @@ graph TD
 ## Project Structure
 
 ```
-hotel-report/
+hotel_report/
 ├── hotel-service/
 │   └── (Go service files)
 ├── report-service/
@@ -78,8 +78,8 @@ hotel-report/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/tfgoztok/hotel-guide-microservices.git
-   cd hotel-guide-microservices
+   git clone https://github.com/tfgoztok/hotel_report.git
+   cd hotel_report
    ```
 
 2. Start each service using Docker Compose:
