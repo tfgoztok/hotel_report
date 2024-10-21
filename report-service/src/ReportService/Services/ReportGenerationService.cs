@@ -63,7 +63,7 @@ namespace ReportService.Services
                     try
                     {
                         var hotelsQuery = @"query($location: String!) { hotelsByLocation(location: $location) { id } }";
-                        var contactsQuery = @"query($location: String!) { contactsByLocation(location: $location) { id type } }";
+                        var contactsQuery = @"query($location: String!) { contactsByLocation(location: $location) { id Type } }";
 
                         var hotelsResult = await _graphQLClient.SendQueryAsync(hotelsQuery, new { location = reportRequest.Location });
                         var contactsResult = await _graphQLClient.SendQueryAsync(contactsQuery, new { location = reportRequest.Location });
@@ -71,11 +71,14 @@ namespace ReportService.Services
                         _logger.LogInformation($"GraphQL hotels result: {hotelsResult}");
                         _logger.LogInformation($"GraphQL contacts result: {contactsResult}");
 
-                        var hotelsData = JsonSerializer.Deserialize<HotelsQueryResult>(hotelsResult);
-                        var contactsData = JsonSerializer.Deserialize<ContactsQueryResult>(contactsResult);
+                        var hotelsData = JsonSerializer.Deserialize<HotelsQueryResult>(hotelsResult, options);
+                        var contactsData = JsonSerializer.Deserialize<ContactsQueryResult>(contactsResult, options);
 
+                        // Ensure hotelsData and contactsData are not null before accessing their properties
                         report.HotelCount = hotelsData?.Data?.HotelsByLocation?.Count ?? 0;
-                        report.PhoneNumberCount = contactsData?.Data?.ContactsByLocation?.Count(c => c.Type == "PHONE") ?? 0;
+                        report.PhoneNumberCount = contactsData?.Data?.ContactsByLocation?.Count(c => c.Type?.Equals("PHONE", StringComparison.OrdinalIgnoreCase) == true) ?? 0;
+
+
                         report.Status = "Completed";
 
                         await _reportRepository.UpdateAsync(report);
