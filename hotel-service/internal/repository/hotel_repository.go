@@ -21,11 +21,11 @@ func NewHotelRepository(db *sql.DB) *HotelRepository {
 // Create inserts a new hotel record into the database.
 func (r *HotelRepository) Create(ctx context.Context, hotel *models.Hotel) error {
 	query := `
-		INSERT INTO hotels (id, official_name, official_surname, company_title, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO hotels (id, official_name, official_surname, company_title, location, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
 	// Execute the insert query with hotel details
-	_, err := r.db.ExecContext(ctx, query, hotel.ID, hotel.OfficialName, hotel.OfficialSurname, hotel.CompanyTitle, hotel.CreatedAt, hotel.UpdatedAt)
+	_, err := r.db.ExecContext(ctx, query, hotel.ID, hotel.OfficialName, hotel.OfficialSurname, hotel.CompanyTitle, hotel.Location, hotel.CreatedAt, hotel.UpdatedAt)
 	return err // Return any error encountered
 }
 
@@ -58,7 +58,7 @@ func (r *HotelRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Ho
 // GetByLocation retrieves a list of hotels based on the provided location.
 func (r *HotelRepository) GetByLocation(ctx context.Context, location string) ([]*models.Hotel, error) {
 	query := `
-		SELECT id, official_name, official_surname, company_title, location
+		SELECT id, official_name, official_surname, company_title, location, created_at, updated_at
 		FROM hotels
 		WHERE location = $1
 	`
@@ -71,7 +71,7 @@ func (r *HotelRepository) GetByLocation(ctx context.Context, location string) ([
 	var hotels []*models.Hotel
 	for rows.Next() {
 		var hotel models.Hotel
-		err := rows.Scan(&hotel.ID, &hotel.OfficialName, &hotel.OfficialSurname, &hotel.CompanyTitle, &hotel.Location)
+		err := rows.Scan(&hotel.ID, &hotel.OfficialName, &hotel.OfficialSurname, &hotel.CompanyTitle, &hotel.Location, &hotel.CreatedAt, &hotel.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}

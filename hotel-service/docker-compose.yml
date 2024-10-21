@@ -7,7 +7,6 @@ services:
       - DATABASE_URL=postgres://user:password@db:5432/hoteldb?sslmode=disable
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - ELASTICSEARCH_URL=http://elasticsearch:9200
-      - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       db:
         condition: service_healthy

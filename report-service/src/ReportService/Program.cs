@@ -4,6 +4,7 @@ using ReportService.Interfaces;
 using ReportService.Services;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,14 +40,20 @@ builder.Services.AddScoped<IReportGenerationService, ReportGenerationService>();
 
 // Add HTTP client services for making HTTP requests
 builder.Services.AddHttpClient();
-// Register GraphQL client as a singleton service, which will use the HTTP client and configuration to make GraphQL queries
-builder.Services.AddSingleton<GraphQLClient>(sp =>
+
+builder.Services.AddScoped<IGraphQLClient>(sp =>
 {
-    var httpClient = sp.GetRequiredService<HttpClient>(); // Get the HTTP client instance
-    var configuration = sp.GetRequiredService<IConfiguration>(); // Get the configuration instance
-    var endpoint = configuration["GraphQL:Endpoint"]; // Get the GraphQL endpoint from configuration
-    return new GraphQLClient(httpClient, endpoint); // Create and return a new GraphQL client instance
+    var httpClientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    var httpClient = httpClientFactory.CreateClient();
+
+    var configuration = sp.GetRequiredService<IConfiguration>();
+    var endpoint = configuration["GraphQL:Endpoint"] 
+        ?? throw new InvalidOperationException("GraphQL:Endpoint is not configured");
+
+    return new GraphQLClient(httpClient, endpoint);
 });
+
+
 
 var app = builder.Build(); // Build the application
 
@@ -63,11 +70,23 @@ app.MapControllers(); // Map controller routes
 
 // Start consuming RabbitMQ messages
 var rabbitMQService = app.Services.GetRequiredService<RabbitMQService>(); // Get the RabbitMQ service
-rabbitMQService.StartConsuming(message => 
+rabbitMQService.StartConsuming(message =>
 {
-    using var scope = app.Services.CreateScope(); // Create a scope for dependency injection
-    var reportService = scope.ServiceProvider.GetRequiredService<IReportGenerationService>(); // Get the report generation service
-    reportService.GenerateReport(message); // Generate a report based on the received message
+    try
+    {
+        using var scope = app.Services.CreateScope(); // Create a scope for dependency injection
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<RabbitMQService>>(); // Get the logger instance
+        logger.LogInformation("Consuming message and creating scope."); // Use the logger instance
+        var reportService = scope.ServiceProvider.GetRequiredService<IReportGenerationService>(); // Get the report generation service
+        logger.LogInformation("Report service resolved, calling GenerateReport."); // Use the logger instance
+        reportService.GenerateReport(message); // Generate a report based on the received message
+        logger.LogInformation("GenerateReport called."); // Use the logger instance
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("An error occurred while consuming the message: " + ex.Message);
+    }
+
 });
 
 app.Run(); // Run the application

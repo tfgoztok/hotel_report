@@ -7,18 +7,19 @@ using ReportService.Models;
 
 namespace ReportService.Services
 {
+    // Class responsible for generating reports based on incoming messages
     public class ReportGenerationService : IReportGenerationService
     {
         // Dependencies for report generation
         private readonly IReportRepository _reportRepository; // Repository for report data
         private readonly ILogger<ReportGenerationService> _logger; // Logger for logging information and errors
-        private readonly GraphQLClient _graphQLClient; // Client for making GraphQL queries
+        private readonly IGraphQLClient _graphQLClient; // Client for sending GraphQL queries
 
         // Constructor to initialize dependencies
         public ReportGenerationService(
             IReportRepository reportRepository,
             ILogger<ReportGenerationService> logger,
-            GraphQLClient graphQLClient)
+            IGraphQLClient graphQLClient)
         {
             _reportRepository = reportRepository; // Assigning the report repository
             _logger = logger; // Assigning the logger
@@ -26,119 +27,139 @@ namespace ReportService.Services
         }
 
         // Method to generate a report based on the incoming message
+        // Parameters:
+        // - message: JSON string containing report request details
         public async Task GenerateReport(string message)
         {
-            _logger.LogInformation($"Received message: {message}"); // Log the received message
+            Console.WriteLine("Starting report generation process");
+            _logger.LogInformation($"Received message: {message}");
 
             try
             {
-                // Deserialize the incoming message to a ReportRequest object
-                var reportRequest = JsonSerializer.Deserialize<ReportRequest>(message);
-
-                if (reportRequest != null) // Check if deserialization was successful
+                var options = new JsonSerializerOptions
                 {
-                    // GraphQL queries to fetch hotels and contacts by location
-                    var hotelsQuery = @"
-                        query($location: String!) {
-                            hotelsByLocation(location: $location) {
-                                id
-                            }
-                        }";
+                    PropertyNameCaseInsensitive = true
+                };
 
-                    var contactsQuery = @"
-                        query($location: String!) {
-                            contactsByLocation(location: $location) {
-                                id
-                                type
-                            }
-                        }";
+                var reportRequest = JsonSerializer.Deserialize<ReportRequest>(message, options);
+                _logger.LogInformation($"Deserialized report request: {JsonSerializer.Serialize(reportRequest)}");
 
-                    // Send queries and get results
-                    var hotelsResult = await _graphQLClient.SendQueryAsync(hotelsQuery, new { location = reportRequest.Location });
-                    var contactsResult = await _graphQLClient.SendQueryAsync(contactsQuery, new { location = reportRequest.Location });
-
-                    // Deserialize results into data models
-                    var hotelsData = JsonSerializer.Deserialize<HotelsQueryResult>(hotelsResult);
-                    var contactsData = JsonSerializer.Deserialize<ContactsQueryResult>(contactsResult);
-
-                    // Count hotels and phone numbers
-                    var hotelCount = hotelsData?.Data?.HotelsByLocation?.Count ?? 0; // Count of hotels
-                    var phoneNumberCount = contactsData?.Data?.ContactsByLocation?.Count(c => c.Type == "PHONE") ?? 0; // Count of phone numbers
-
-                    // Create a report object
+                if (reportRequest != null)
+                {
                     var report = new Report
                     {
-                        Id = reportRequest.Id, // Set report ID
-                        RequestDate = DateTime.UtcNow, // Set the current date as request date
-                        Status = "Completed", // Set report status
-                        Location = reportRequest.Location, // Set report location
-                        HotelCount = hotelCount, // Set hotel count
-                        PhoneNumberCount = phoneNumberCount // Set phone number count
+                        ReportRequestId = reportRequest.Id,
+                        RequestDate = DateTime.UtcNow,
+                        Status = "Processing",
+                        Location = reportRequest.Location ?? "Unknown",
+                        HotelCount = 0,
+                        PhoneNumberCount = 0
                     };
 
-                    // Save the report to the repository
-                    await _reportRepository.AddAsync(report); // Save the report asynchronously
+                    _logger.LogInformation($"Created initial report: {JsonSerializer.Serialize(report)}");
 
-                    _logger.LogInformation($"Report generated for location: {report.Location}"); // Log successful report generation
+                    await _reportRepository.AddAsync(report);
+
+                    try
+                    {
+                        var hotelsQuery = @"query($location: String!) { hotelsByLocation(location: $location) { id } }";
+                        var contactsQuery = @"query($location: String!) { contactsByLocation(location: $location) { id type } }";
+
+                        var hotelsResult = await _graphQLClient.SendQueryAsync(hotelsQuery, new { location = reportRequest.Location });
+                        var contactsResult = await _graphQLClient.SendQueryAsync(contactsQuery, new { location = reportRequest.Location });
+
+                        _logger.LogInformation($"GraphQL hotels result: {hotelsResult}");
+                        _logger.LogInformation($"GraphQL contacts result: {contactsResult}");
+
+                        var hotelsData = JsonSerializer.Deserialize<HotelsQueryResult>(hotelsResult);
+                        var contactsData = JsonSerializer.Deserialize<ContactsQueryResult>(contactsResult);
+
+                        report.HotelCount = hotelsData?.Data?.HotelsByLocation?.Count ?? 0;
+                        report.PhoneNumberCount = contactsData?.Data?.ContactsByLocation?.Count(c => c.Type == "PHONE") ?? 0;
+                        report.Status = "Completed";
+
+                        await _reportRepository.UpdateAsync(report);
+
+                        _logger.LogInformation($"Updated report: {JsonSerializer.Serialize(report)}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error processing GraphQL queries");
+                        report.Status = "Error";
+                        await _reportRepository.UpdateAsync(report);
+                    }
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to deserialize report request"); // Log warning if deserialization fails
+                    _logger.LogWarning("Failed to deserialize report request: null result");
+                    await CreateErrorReport("Failed to deserialize report request", "Unknown");
                 }
-            }
-            catch (JsonException ex)
-            {
-                _logger.LogError(ex, "Error processing message"); // Log error for JSON processing issues
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating report"); // Log error for general report generation issues
+                _logger.LogError(ex, "Error generating report: {Message}", ex.Message);
+                await CreateErrorReport($"Error generating report: {ex.Message}", "Unknown");
             }
+        }
+
+        // Method to create an error report
+        private async Task CreateErrorReport(string errorMessage, string location = "Unknown")
+        {
+            var errorReport = new Report
+            {
+                Id = Guid.NewGuid().ToString(),
+                RequestDate = DateTime.UtcNow,
+                Status = "Error",
+                Location = location,
+                HotelCount = 0,
+                PhoneNumberCount = 0
+            };
+            await _reportRepository.AddAsync(errorReport);
         }
     }
 
-    // Class representing the report request structure
+    // Class representing the incoming report request
     public class ReportRequest
     {
-        public Guid Id { get; set; } // Unique identifier for the report request
-        public string Status { get; set; } // Status of the report request
-        public string Location { get; set; } // Location for the report
+        public Guid Id { get; set; } // Unique identifier for the report
+        public string? Status { get; set; } // Status of the report
+        public string? Location { get; set; } // Location for the report
     }
 
-    // Class representing the result of hotel queries
+    // Class representing the result of the hotels query
     public class HotelsQueryResult
     {
-        public HotelsData Data { get; set; } // Data containing hotel information
+        public HotelsData? Data { get; set; } // Data containing hotel information
     }
 
     // Class representing the data structure for hotels
     public class HotelsData
     {
-        public List<HotelResult> HotelsByLocation { get; set; } // List of hotels by location
+        public List<HotelResult>? HotelsByLocation { get; set; } // List of hotels by location
     }
 
     // Class representing individual hotel results
     public class HotelResult
     {
-        public string Id { get; set; } // Unique identifier for the hotel
+        public string? Id { get; set; } // Unique identifier for the hotel
     }
 
-    // Class representing the result of contact queries
+    // Class representing the result of the contacts query
     public class ContactsQueryResult
     {
-        public ContactsData Data { get; set; } // Data containing contact information
+        public ContactsData? Data { get; set; } // Data containing contact information
     }
 
     // Class representing the data structure for contacts
     public class ContactsData
     {
-        public List<ContactResult> ContactsByLocation { get; set; } // List of contacts by location
+        public List<ContactResult>? ContactsByLocation { get; set; } // List of contacts by location
     }
 
     // Class representing individual contact results
     public class ContactResult
     {
-        public string Id { get; set; } // Unique identifier for the contact
-        public string Type { get; set; } // Type of the contact (e.g., PHONE)
+        public string? Id { get; set; } // Unique identifier for the contact
+        public string? Type { get; set; } // Type of the contact (e.g., PHONE)
     }
 }

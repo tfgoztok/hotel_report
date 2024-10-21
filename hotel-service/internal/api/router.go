@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/olivere/elastic/v7"
+	"github.com/tfgoztok/hotel-service/internal/api/graphql"
 	"github.com/tfgoztok/hotel-service/internal/api/handlers"
 	"github.com/tfgoztok/hotel-service/internal/api/middleware"
 	"github.com/tfgoztok/hotel-service/internal/messaging"
@@ -32,6 +33,13 @@ func NewRouter(db *sql.DB, logger logger.Logger, rabbitMQ messaging.RabbitMQInte
 
 	// Initialize handler for elk
 	reportHandler := handlers.NewReportHandler(rabbitMQ, esClient)
+
+	graphqlService := graphql.NewGraphQLService(hotelService)
+	graphqlHandler, err := handlers.NewGraphQLHandler(graphqlService)
+	if err != nil {
+		logger.Fatal("Failed to create GraphQL handler", "error", err)
+	}
+	r.Handle("/graphql", graphqlHandler)
 
 	// Middleware for logging requests
 	r.Use(middleware.Logging(logger))

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace ReportService.Services
 {
-    public class GraphQLClient
+    public class GraphQLClient : IGraphQLClient
     {
         private readonly HttpClient _httpClient; // HttpClient for making requests
         private readonly string _endpoint; // Endpoint for the GraphQL service
@@ -18,7 +18,7 @@ namespace ReportService.Services
         }
 
         // Method to send a GraphQL query asynchronously
-        public async Task<string> SendQueryAsync(string query, object variables = null)
+        public async Task<string> SendQueryAsync(string query, object? variables = null)
         {
             // Create a request object containing the query and variables
             var request = new

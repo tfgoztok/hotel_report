@@ -10,6 +10,7 @@ services:
       - MongoDbSettings__DatabaseName=ReportDB
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__QueueName=report_requests
+      - GraphQL__Endpoint=http://hotel-service:8080/graphql
       - ELASTICSEARCH_URL=http://elasticsearch:9200
     depends_on:
       - mongodb
