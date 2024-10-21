@@ -60,12 +60,11 @@ graph TD
 ## Project Structure
 
 ```
-hotel-guide-microservices/
+hotel-report/
 ├── hotel-service/
 │   └── (Go service files)
 ├── report-service/
 │   └── (.NET Core service files)
-├── docker-compose.yml
 └── README.md
 ```
 
@@ -79,11 +78,11 @@ hotel-guide-microservices/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/hotel-guide-microservices.git
+   git clone https://github.com/tfgoztok/hotel-guide-microservices.git
    cd hotel-guide-microservices
    ```
 
-2. Start the each service using Docker Compose:
+2. Start each service using Docker Compose:
    ```
    docker-compose up --build
    ```
