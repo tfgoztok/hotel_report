@@ -18,30 +18,30 @@ namespace ReportService.Tests
 
         public RabbitMQServiceTests()
         {
-            // Initialize mock objects
+            // Initialize mock objects and set up their behavior
             _mockConfiguration = new Mock<IConfiguration>();
             _mockConnectionFactory = new Mock<IConnectionFactory>();
             _mockConnection = new Mock<IConnection>();
             _mockChannel = new Mock<IModel>();
 
-            // Setup mock behavior for configuration and connection factory
-            _mockConfiguration.Setup(c => c["RabbitMQ:HostName"]).Returns("localhost");
+            // Configure mock to return a test queue name
+            _mockConfiguration.Setup(c => c["RabbitMQ:QueueName"]).Returns("test_queue");
+            // Set up connection factory to return a mock connection
             _mockConnectionFactory.Setup(cf => cf.CreateConnection()).Returns(_mockConnection.Object);
+            // Set up connection to return a mock channel
             _mockConnection.Setup(c => c.CreateModel()).Returns(_mockChannel.Object);
         }
 
         [Fact]
         public void Constructor_InitializesRabbitMQConnection()
         {
-            // Arrange: Setup queue name for testing
-            _mockConfiguration.Setup(c => c["RabbitMQ:QueueName"]).Returns("test_queue");
-
-            // Act: Create instance of RabbitMQService
+            // Arrange & Act
             var rabbitMQService = new RabbitMQService(_mockConfiguration.Object, _mockConnectionFactory.Object);
 
-            // Assert: Verify that connection and channel are created
+            // Assert that the connection and channel are created once
             _mockConnectionFactory.Verify(cf => cf.CreateConnection(), Times.Once);
             _mockConnection.Verify(c => c.CreateModel(), Times.Once);
+            // Verify that the queue is declared once
             _mockChannel.Verify(ch => ch.QueueDeclare(
                 It.IsAny<string>(),
                 It.IsAny<bool>(),
@@ -54,15 +54,14 @@ namespace ReportService.Tests
         [Fact]
         public void PublishMessage_SendsMessageToQueue()
         {
-            // Arrange: Setup queue name and message for testing
-            _mockConfiguration.Setup(c => c["RabbitMQ:QueueName"]).Returns("test_queue");
+            // Arrange
             var rabbitMQService = new RabbitMQService(_mockConfiguration.Object, _mockConnectionFactory.Object);
             var message = "Test message";
 
-            // Act: Publish message to the queue
+            // Act
             rabbitMQService.PublishMessage(message);
 
-            // Assert: Verify that the message was published
+            // Assert that the message is published to the queue
             _mockChannel.Verify(ch => ch.BasicPublish(
                 It.IsAny<string>(),
                 It.IsAny<string>(),
@@ -75,14 +74,13 @@ namespace ReportService.Tests
         [Fact]
         public void StartConsuming_SetupConsumerCorrectly()
         {
-            // Arrange: Setup queue name for testing
-            _mockConfiguration.Setup(c => c["RabbitMQ:QueueName"]).Returns("test_queue");
+            // Arrange
             var rabbitMQService = new RabbitMQService(_mockConfiguration.Object, _mockConnectionFactory.Object);
 
-            // Act: Start consuming messages from the queue
+            // Act
             rabbitMQService.StartConsuming(_ => { });
 
-            // Assert: Verify that the consumer is set up correctly
+            // Assert that the consumer is set up correctly
             _mockChannel.Verify(ch => ch.BasicConsume(
                 It.IsAny<string>(),
                 It.IsAny<bool>(),

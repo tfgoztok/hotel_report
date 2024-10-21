@@ -5,6 +5,7 @@ using ReportService.Services;
 using Serilog;
 using Serilog.Sinks.Elasticsearch;
 using Microsoft.Extensions.Logging;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +35,9 @@ var mongoDatabase = mongoClient.GetDatabase(mongoDatabaseName); // Get the speci
 builder.Services.AddSingleton<IMongoDatabase>(mongoDatabase); // Register MongoDB database as a singleton service
 
 // Add services
-builder.Services.AddSingleton<RabbitMQService>(); // Register RabbitMQ service as a singleton
+builder.Services.AddSingleton<IConnectionFactory>(sp => 
+    new ConnectionFactory { HostName = builder.Configuration["RabbitMQ:HostName"] });
+builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>(); // Register RabbitMQ service as a singleton
 builder.Services.AddScoped<IReportRepository, ReportRepository>(); // Register report repository with scoped lifetime
 builder.Services.AddScoped<IReportGenerationService, ReportGenerationService>(); // Register report generation service with scoped lifetime
 
@@ -69,7 +72,7 @@ app.UseAuthorization(); // Enable authorization middleware
 app.MapControllers(); // Map controller routes
 
 // Start consuming RabbitMQ messages
-var rabbitMQService = app.Services.GetRequiredService<RabbitMQService>(); // Get the RabbitMQ service
+var rabbitMQService = app.Services.GetRequiredService<IRabbitMQService>(); // Get the RabbitMQ service
 rabbitMQService.StartConsuming(message =>
 {
     try
