@@ -1,0 +1,56 @@
+# Ignore Go build outputs
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Ignore Go modules and cache
+vendor/
+go.sum
+go.work
+go.work.sum
+.cache/
+*.mod
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore Docker and deployment files
+docker-compose.override.yml
+.env
+docker-compose.local.yml
+
+# Ignore test results and coverage
+*.coverprofile
+*.coverage
+*.testresult
+
+# Ignore logs and output files
+*.log
+*.out
+*.pid
+
+# Ignore IDE and temporary files
+.vscode/
+.idea/
+*.tmp
+*.bak
+*.swp
+*.lock
+*.orig
+
+# Ignore generated files and packages
+node_modules/
+vendor/
+*.snupkg
+
+# Ignore binary files
+*.a
+*.o
+
+# Ignore system files
+repopack-output.txt

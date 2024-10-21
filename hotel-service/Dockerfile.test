@@ -1,0 +1,11 @@
+FROM golang:1.21-alpine
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Wait for RabbitMQ to be ready
+CMD ["sh", "-c", "apk add --no-cache netcat-openbsd && while ! nc -z rabbitmq 5672; do sleep 1; done; go test ./tests/... -v -cover"]
