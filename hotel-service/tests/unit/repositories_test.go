@@ -26,12 +26,13 @@ func TestHotelRepositoryCreate(t *testing.T) {
 		OfficialName:    "John",
 		OfficialSurname: "Doe",
 		CompanyTitle:    "Test Hotel",
+		Location:        "New York",
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 	}
 
 	mock.ExpectExec("INSERT INTO hotels").
-		WithArgs(hotel.ID, hotel.OfficialName, hotel.OfficialSurname, hotel.CompanyTitle, hotel.CreatedAt, hotel.UpdatedAt).
+		WithArgs(hotel.ID, hotel.OfficialName, hotel.OfficialSurname, hotel.CompanyTitle, hotel.Location, hotel.CreatedAt, hotel.UpdatedAt).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = repo.Create(context.Background(), hotel)
