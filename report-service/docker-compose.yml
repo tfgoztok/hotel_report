@@ -39,8 +39,8 @@ services:
       - MongoDbSettings__DatabaseName=ReportDB
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__QueueName=report_requests
-    networks:
-      - report-network
+    volumes:
+      - ./testresults:/testresults
 
 volumes:
   mongodb_data:
@@ -48,5 +48,5 @@ volumes:
 networks:
   report-network:
     driver: bridge
-  hotel-network:  # Updated network name
+  hotel-network:
     external: true

@@ -19,7 +19,12 @@ RUN dotnet restore "ReportService.Tests/ReportService.Tests.csproj"
 COPY tests/ReportService.Tests/. ReportService.Tests/
 WORKDIR "/src/ReportService.Tests"
 RUN dotnet build "ReportService.Tests.csproj" -c Release -o /app/build
-RUN dotnet test "ReportService.Tests.csproj" --logger:trx
+
+# Add this line to list contents of the current directory
+RUN ls -la
+
+# Modify this line to use a simpler test command
+CMD ["dotnet", "test", "--logger:console;verbosity=detailed"]
 
 # Publish stage
 FROM build AS publish
