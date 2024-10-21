@@ -48,59 +48,6 @@ namespace ReportService.Tests
             _service = new ReportGenerationService(_mockRepo.Object, _mockLogger.Object, _mockGraphQLClient.Object);
         }
 
-       /*  [Fact]
-        public async Task GenerateReport_WithValidMessage_AddsReportToRepository()
-        {
-            // Arrange
-            var message = "{\"Id\":\"12345\",\"Location\":\"Istanbul\",\"Status\":\"Pending\"}";
-            var hotelsResponse = "{\"data\":{\"hotelsByLocation\":[{\"id\":\"1\"}]}}";
-            var contactsResponse = "{\"data\":{\"contactsByLocation\":[{\"id\":\"1\",\"type\":\"PHONE\"}]}}";
-
-            _mockGraphQLClient.SetupSequence(client => client.SendQueryAsync(It.IsAny<string>(), It.IsAny<object>()))
-                .ReturnsAsync(hotelsResponse)
-                .ReturnsAsync(contactsResponse);
-
-            Report capturedInitialReport = null;
-            Report capturedFinalReport = null;
-            _mockRepo.Setup(repo => repo.AddAsync(It.IsAny<Report>()))
-                .Callback<Report>(r => capturedInitialReport = r)
-                .Returns(Task.CompletedTask);
-
-            _mockRepo.Setup(repo => repo.UpdateAsync(It.IsAny<Report>()))
-                .Callback<Report>(r => capturedFinalReport = r)
-                .Returns(Task.CompletedTask);
-
-            // Act
-            await _service.GenerateReport(message);
-
-            // Assert
-            Assert.NotNull(capturedInitialReport);
-            Assert.NotNull(capturedFinalReport);
-
-            Console.WriteLine("Initial Report:");
-            Console.WriteLine(JsonSerializer.Serialize(capturedInitialReport));
-
-            Console.WriteLine("Final Report:");
-            Console.WriteLine(JsonSerializer.Serialize(capturedFinalReport));
-
-            Console.WriteLine("Logged messages:");
-            foreach (var logMessage in _logMessages)
-            {
-                Console.WriteLine(logMessage);
-            }
-
-            Assert.Equal("Istanbul", capturedInitialReport.Location);
-            Assert.Equal("Istanbul", capturedFinalReport.Location);
-            Assert.Equal("Completed", capturedFinalReport.Status);
-            Assert.Equal(1, capturedFinalReport.HotelCount);
-            Assert.Equal(1, capturedFinalReport.PhoneNumberCount);
-
-            Assert.Contains(_logMessages, m => m.Contains("Starting GenerateReport with message:"));
-            Assert.Contains(_logMessages, m => m.Contains("Deserialized report request:"));
-            Assert.Contains(_logMessages, m => m.Contains("Creating initial report with Location: Istanbul"));
-            Assert.Contains(_logMessages, m => m.Contains("Added initial report to repository"));
-            Assert.DoesNotContain(_logMessages, m => m.Contains("Error"));
-        } */
 
         [Fact]
         public async Task GenerateReport_WithInvalidMessage_LogsError()
@@ -146,6 +93,87 @@ namespace ReportService.Tests
             Assert.NotNull(capturedReport);
             Assert.Equal("Unknown", capturedReport.Location);
             Assert.Equal("Error", capturedReport.Status);
+        }
+
+        [Fact]
+        public async Task GenerateReport_WithValidMessage_GeneratesReportAndAddsToRepository()
+        {
+            // Arrange: Create a valid message for report generation
+            var validMessage = JsonSerializer.Serialize(new ReportRequest
+            {
+                Id = Guid.NewGuid(),
+                Status = "Pending",
+                Location = "New York"
+            });
+
+            // Set up mock responses for GraphQL queries
+            var hotelsQueryResult = JsonSerializer.Serialize(new HotelsQueryResult
+            {
+                Data = new HotelsData
+                {
+                    HotelsByLocation = new List<HotelResult>
+                    {
+                        new HotelResult { Id = "1" },
+                        new HotelResult { Id = "2" }
+                    }
+                }
+            });
+
+            var contactsQueryResult = JsonSerializer.Serialize(new ContactsQueryResult
+            {
+                Data = new ContactsData
+                {
+                    ContactsByLocation = new List<ContactResult>
+                    {
+                        new ContactResult { Id = "1", Type = "PHONE" },
+                        new ContactResult { Id = "2", Type = "EMAIL" },
+                        new ContactResult { Id = "3", Type = "PHONE" }
+                    }
+                }
+            });
+
+            // Mock the GraphQL client to return predefined results
+            _mockGraphQLClient.Setup(client => client.SendQueryAsync(It.IsAny<string>(), It.IsAny<object>()))
+                .ReturnsAsync((string query, object variables) =>
+                {
+                    if (query.Contains("hotelsByLocation"))
+                        return hotelsQueryResult;
+                    else if (query.Contains("contactsByLocation"))
+                        return contactsQueryResult;
+                    return null;
+                });
+
+            // Capture the report that will be added to the repository
+            Report capturedReport = null;
+            _mockRepo.Setup(repo => repo.AddAsync(It.IsAny<Report>()))
+                .Callback<Report>(r => capturedReport = r)
+                .Returns(Task.CompletedTask);
+
+            _mockRepo.Setup(repo => repo.UpdateAsync(It.IsAny<Report>()))
+                .Callback<Report>(r => capturedReport = r)
+                .Returns(Task.CompletedTask);
+
+            // Act: Generate the report
+            await _service.GenerateReport(validMessage);
+
+            // Assert: Verify the report was created with expected values
+            Assert.NotNull(capturedReport);
+            Assert.Equal("New York", capturedReport.Location);
+            Assert.Equal("Completed", capturedReport.Status);
+            Assert.Equal(2, capturedReport.HotelCount);
+            Assert.Equal(2, capturedReport.PhoneNumberCount);
+
+            // Verify interactions with the repository and GraphQL client
+            _mockRepo.Verify(repo => repo.AddAsync(It.IsAny<Report>()), Times.Once);
+            _mockRepo.Verify(repo => repo.UpdateAsync(It.IsAny<Report>()), Times.Once);
+            _mockGraphQLClient.Verify(client => client.SendQueryAsync(It.IsAny<string>(), It.IsAny<object>()), Times.Exactly(2));
+
+            // Verify that the expected log messages were generated
+            Assert.Contains(_logMessages, msg => msg.Contains("Deserialized report request"));
+            Assert.Contains(_logMessages, msg => msg.Contains("Created initial report"));
+            Assert.Contains(_logMessages, msg => msg.Contains("GraphQL hotels result"));
+            Assert.Contains(_logMessages, msg => msg.Contains("GraphQL contacts result"));
+            Assert.Contains(_logMessages, msg => msg.Contains("Updated report"));
         }
     }
 }
