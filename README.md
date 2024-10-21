@@ -84,8 +84,10 @@ hotel_report/
 
 2. Start each service using Docker Compose:
    ```
-   docker-compose up --build
+   cd hotel-service && docker-compose up --build
+   cd report-service && docker-compoer up --build
    ```
+Test results also can be seen in the logs. docker-compose runs the tests for both services.
 
 3. The services will be available at:
    - Hotel Service: http://localhost:8080
