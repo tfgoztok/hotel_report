@@ -29,22 +29,49 @@ hotel-service/
 │       └── main.go
 ├── internal/
 │   ├── api/
+│   │   ├── graphql/
+│   │   │   └── schema.go
 │   │   ├── handlers/
+│   │   │   ├── contact_handler.go
+│   │   │   ├── graphql_handler.go
+│   │   │   ├── hotel_handler.go
+│   │   │   └── report_handler.go
 │   │   ├── middleware/
+│   │   │   └── logging.go
 │   │   └── router.go
 │   ├── config/
+│   │   └── config.go
 │   ├── db/
-│   │   └── migrations/
+│   │   ├── migrations/
+│   │   │   ├── 000001_create_hotels_table.up.sql
+│   │   │   └── 000002_create_contacts_table.up.sql
+│   │   ├── db.go
+│   │   └── migrations.go
+│   ├── messaging/
+│   │   └── rabbitmq.go
 │   ├── models/
+│   │   ├── contact.go
+│   │   └── hotel.go
 │   ├── repository/
+│   │   ├── contact_repository.go
+│   │   └── hotel_repository.go
 │   └── service/
+│       ├── contact_service.go
+│       └── hotel_service.go
 ├── pkg/
 │   └── logger/
+│       └── logger.go
 ├── tests/
 │   ├── integration/
+│   │   └── rabbitmq_test.go
 │   └── unit/
+│       ├── handlers_test.go
+│       ├── rabbitmq_test.go
+│       ├── repositories_test.go
+│       └── services_test.go
 ├── Dockerfile
 ├── docker-compose.yml
+├── filebeat.yml
 └── README.md
 ```
 

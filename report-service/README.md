@@ -25,15 +25,31 @@ report-service/
 ├── src/
 │   └── ReportService/
 │       ├── Controllers/
-│       ├── Models/
-│       ├── Services/
-│       ├── Interfaces/
+│       │   └── ReportController.cs
 │       ├── Data/
 │       │   └── Repositories/
+│       │       └── ReportRepository.cs
+│       ├── Interfaces/
+│       │   ├── IGraphQLClient.cs
+│       │   ├── IRabbitMQService.cs
+│       │   ├── IReportGenerationService.cs
+│       │   └── IReportRepository.cs
+│       ├── Models/
+│       │   └── Report.cs
+│       ├── Services/
+│       │   ├── GraphQLClient.cs
+│       │   ├── RabbitMQService.cs
+│       │   └── ReportGenerationService.cs
 │       ├── Program.cs
+│       ├── ReportService.csproj
 │       └── appsettings.json
 ├── tests/
 │   └── ReportService.Tests/
+│       ├── GraphQLClientTests.cs
+│       ├── RabbitMQServiceTests.cs
+│       ├── ReportControllerTests.cs
+│       ├── ReportGenerationServiceTests.cs
+│       └── ReportService.Tests.csproj
 ├── Dockerfile
 ├── docker-compose.yml
 └── README.md

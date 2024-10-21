@@ -60,12 +60,11 @@ graph TD
 ## Project Structure
 
 ```
-hotel-guide-microservices/
+hotel_report/
 ├── hotel-service/
 │   └── (Go service files)
 ├── report-service/
 │   └── (.NET Core service files)
-├── docker-compose.yml
 └── README.md
 ```
 
@@ -79,11 +78,11 @@ hotel-guide-microservices/
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/hotel-guide-microservices.git
-   cd hotel-guide-microservices
+   git clone https://github.com/tfgoztok/hotel_report.git
+   cd hotel_report
    ```
 
-2. Start the each service using Docker Compose:
+2. Start each service using Docker Compose:
    ```
    docker-compose up --build
    ```
@@ -118,7 +117,3 @@ dotnet test
 ## Logging
 
 The ELK stack is used for centralized logging. Access the Kibana dashboard at http://localhost:5601 to view and analyze logs.
-
-## Contributing
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
