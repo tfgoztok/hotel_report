@@ -10,6 +10,8 @@ namespace ReportService.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; } = null!;
 
+        public Guid ReportRequestId { get; set; } // Store the original request Id
+
         // Date when the report was requested
         public DateTime RequestDate { get; set; }
         

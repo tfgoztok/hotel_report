@@ -7,6 +7,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
+	github.com/graphql-go/graphql v0.8.1
 	github.com/lib/pq v1.10.9
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/spf13/viper v1.15.0

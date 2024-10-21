@@ -19,7 +19,9 @@ RUN dotnet restore "ReportService.Tests/ReportService.Tests.csproj"
 COPY tests/ReportService.Tests/. ReportService.Tests/
 WORKDIR "/src/ReportService.Tests"
 RUN dotnet build "ReportService.Tests.csproj" -c Release -o /app/build
-RUN dotnet test "ReportService.Tests.csproj" --logger:trx
+
+# Run tests with coverage
+CMD ["dotnet", "test", "--logger:console;verbosity=detailed", "/p:CollectCoverage=true", "/p:CoverletOutputFormat=opencover", "/p:CoverletOutput=/testresults/coverage.xml"]
 
 # Publish stage
 FROM build AS publish
